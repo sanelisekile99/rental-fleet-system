@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
-import { useAppContext } from '@/contexts/AppContext';
+import { useAuth } from '@/contexts/useAuth';
+import { useAppContext } from '@/contexts/useAppContext';
 import { toast } from '@/components/ui/use-toast';
 import {
   Car,

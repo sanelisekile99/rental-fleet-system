@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useAppContext } from '@/contexts/AppContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAppContext } from '@/contexts/useAppContext';
+import { useAuth } from '@/contexts/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ViewType } from '@/types';
 import Sidebar from './Sidebar';

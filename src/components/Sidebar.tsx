@@ -1,6 +1,7 @@
 import React from 'react';
 import { ViewType } from '@/types';
-import { useAuth, Permission } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/useAuth';
+import { Permission } from '@/contexts/AuthContext';
 import {
   LayoutDashboard,
   Car,

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useAuth, UserRole } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/useAuth';
+import { UserRole } from '@/contexts/AuthContext';
 import { Can, HasRole } from '@/components/ProtectedRoute';
 import {
   Settings as SettingsIcon,
@@ -66,13 +67,7 @@ const Settings: React.FC = () => {
     quotationValidDays: 7,
   });
 
-  useEffect(() => {
-    if (activeTab === 'users' && hasPermission('manage_users')) {
-      fetchUsers();
-    }
-  }, [activeTab]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoadingUsers(true);
     try {
       const { data } = await supabase
@@ -85,7 +80,13 @@ const Settings: React.FC = () => {
     } finally {
       setLoadingUsers(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'users' && hasPermission('manage_users')) {
+      fetchUsers();
+    }
+  }, [activeTab, hasPermission, fetchUsers]);
 
   const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
     try {

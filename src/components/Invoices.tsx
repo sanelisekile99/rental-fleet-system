@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Invoice, Payment } from '@/types';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/useAuth';
 import { Can } from '@/components/ProtectedRoute';
 import {
   Search,
@@ -34,11 +34,7 @@ const Invoices: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState('Bank Transfer');
   const [paymentReference, setPaymentReference] = useState('');
 
-  useEffect(() => {
-    fetchData();
-  }, [user]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       let invoicesQuery = supabase
         .from('invoices')
@@ -62,7 +58,11 @@ const Invoices: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch =

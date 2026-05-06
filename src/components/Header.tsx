@@ -1,6 +1,6 @@
 import React from 'react';
 import { Bell, Search, Menu, User, LogOut, Settings, Shield } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/useAuth';
 
 interface HeaderProps {
   title: string;

@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Vehicle } from '@/types';
-import { useAuth } from '@/contexts/AuthContext';
-import { useAppContext } from '@/contexts/AppContext';
+import { useAuth } from '@/contexts/useAuth';
+import { useAppContext } from '@/contexts/useAppContext';
 import { Can } from '@/components/ProtectedRoute';
 import { toast } from '@/components/ui/use-toast';
 import {
@@ -37,13 +37,7 @@ const FleetManagement: React.FC = () => {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-
-
-  useEffect(() => {
-    fetchVehicles();
-  }, []);
-
-  const fetchVehicles = async () => {
+  const fetchVehicles = useCallback(async () => {
     try {
       let query = supabase
         .from('vehicles')
@@ -162,7 +156,11 @@ const FleetManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.role]);
+
+  useEffect(() => {
+    fetchVehicles();
+  }, [fetchVehicles]);
 
   const filteredVehicles = vehicles.filter((vehicle) => {
     const matchesSearch =

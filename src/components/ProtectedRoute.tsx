@@ -1,5 +1,6 @@
 import React from 'react';
-import { useAuth, Permission, UserRole } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/useAuth';
+import { Permission, UserRole } from '@/contexts/AuthContext';
 import { ShieldAlert, Lock } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -15,7 +16,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   roles,
   fallback
 }) => {
-  const { hasPermission, hasRole, user } = useAuth();
+  const { hasPermission, hasRole } = useAuth();
 
   // Check permission
   if (permission && !hasPermission(permission)) {
@@ -55,12 +56,6 @@ const AccessDenied: React.FC<AccessDeniedProps> = ({ type }) => {
 };
 
 export default ProtectedRoute;
-
-// Hook for conditional rendering based on permissions
-export const usePermission = (permission: Permission): boolean => {
-  const { hasPermission } = useAuth();
-  return hasPermission(permission);
-};
 
 // Component for conditional rendering
 interface CanProps {

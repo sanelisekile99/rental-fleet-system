@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
 import { ViewType, Vehicle } from '@/types';
+import { AppContext } from './app-context';
 
 interface AppContextType {
   sidebarOpen: boolean;
@@ -11,19 +12,6 @@ interface AppContextType {
   selectedVehicleForRequest: Vehicle | null;
   setSelectedVehicleForRequest: (vehicle: Vehicle | null) => void;
 }
-
-const defaultAppContext: AppContextType = {
-  sidebarOpen: false,
-  toggleSidebar: () => {},
-  navigateToView: () => {},
-  setNavigateFunction: () => {},
-  selectedVehicleForRequest: null,
-  setSelectedVehicleForRequest: () => {},
-};
-
-const AppContext = createContext<AppContextType>(defaultAppContext);
-
-export const useAppContext = () => useContext(AppContext);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);

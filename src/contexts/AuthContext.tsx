@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { useState, useEffect, useCallback, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
+import { AuthContext } from './auth-context';
 
 export type UserRole = 'government_user' | 'government_approver' | 'rental_admin' | 'inspector' | 'fleet_manager';
 
@@ -83,87 +84,21 @@ const rolePermissions: Record<UserRole, Permission[]> = {
   ]
 };
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    let mounted = true;
-    
-    const initAuth = async () => {
-      try {
-        // Set a timeout to prevent infinite loading
-        const timeout = setTimeout(() => {
-          if (mounted) {
-            setIsLoading(false);
-          }
-        }, 3000);
-
-        await checkSession();
-        clearTimeout(timeout);
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        if (mounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    initAuth();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        await fetchUserProfile(session.user.id, session.user.email || '');
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-      }
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  const checkSession = async () => {
-    try {
-      // Add timeout for session check
-      const sessionPromise = supabase.auth.getSession();
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Session check timeout')), 2000)
-      );
-      
-      const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]) as any;
-      if (session?.user) {
-        await fetchUserProfile(session.user.id, session.user.email || '');
-      }
-    } catch (error) {
-      console.error('Error checking session:', error);
-      // If database is not accessible, just set loading to false so user can access login
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchUserProfile = async (authId: string, email: string) => {
+  const fetchUserProfile = useCallback(async (authId: string, email: string) => {
     try {
       // First try to find by auth_id
-      let { data: userData, error } = await supabase
+      let userData;
+      const { data, error } = await supabase
         .from('system_users')
         .select('*, department:government_departments(name)')
         .eq('auth_id', authId)
         .single();
+
+      userData = data;
 
       // If not found by auth_id, try by email and update auth_id
       if (!userData && !error) {
@@ -179,7 +114,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             .from('system_users')
             .update({ auth_id: authId })
             .eq('id', userByEmail.id);
-          
+
           userData = userByEmail;
         }
       }
@@ -223,7 +158,52 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isActive: true
       });
     }
-  };
+  }, []);
+
+  const checkSession = useCallback(async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await fetchUserProfile(session.user.id, session.user.email || '');
+      }
+    } catch (error) {
+      console.error('Error checking session:', error);
+      // If database is not accessible, just set loading to false so user can access login
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchUserProfile]);
+
+  useEffect(() => {
+    let mounted = true;
+    
+    const initAuth = async () => {
+      try {
+        await checkSession();
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    initAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        await fetchUserProfile(session.user.id, session.user.email || '');
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [checkSession, fetchUserProfile]);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
@@ -321,8 +301,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       return { success: false, error: 'Login failed' };
-    } catch (error: any) {
-      return { success: false, error: error.message || 'An error occurred' };
+    } catch (error: unknown) {
+      return { success: false, error: error instanceof Error ? error.message : 'An error occurred' };
     } finally {
       setIsLoading(false);
     }
@@ -382,8 +362,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       return { success: false, error: 'Registration failed' };
-    } catch (error: any) {
-      return { success: false, error: error.message || 'An error occurred' };
+    } catch (error: unknown) {
+      return { success: false, error: error instanceof Error ? error.message : 'An error occurred' };
     } finally {
       setIsLoading(false);
     }

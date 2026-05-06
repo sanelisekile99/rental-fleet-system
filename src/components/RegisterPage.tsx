@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth, UserRole } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/useAuth';
+import { UserRole } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Building2, Mail, Lock, Eye, EyeOff, AlertCircle, Loader2, User, Phone, ArrowLeft } from 'lucide-react';
 

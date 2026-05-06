@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { RentalRequest, Department } from '@/types';
-import { useAuth } from '@/contexts/AuthContext';
-import { useAppContext } from '@/contexts/AppContext';
+import { useAuth } from '@/contexts/useAuth';
+import { useAppContext } from '@/contexts/useAppContext';
 import { Can } from '@/components/ProtectedRoute';
 import { toast } from '@/components/ui/use-toast';
 import {
@@ -49,10 +49,6 @@ const RentalRequests: React.FC = () => {
     priority: 'normal',
   });
 
-  useEffect(() => {
-    fetchData();
-  }, [user]);
-
   // Handle pre-selected vehicle from Fleet Management
   useEffect(() => {
     if (selectedVehicleForRequest) {
@@ -66,7 +62,7 @@ const RentalRequests: React.FC = () => {
     }
   }, [selectedVehicleForRequest, setSelectedVehicleForRequest]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       let requestsQuery = supabase
         .from('rental_requests')
@@ -229,7 +225,11 @@ const RentalRequests: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const filteredRequests = requests.filter((request) => {
     const matchesSearch =
