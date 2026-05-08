@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
-  base: '/rental-fleet-system/',
+  base: './',
   plugins: [
     react()
   ].filter(Boolean),
